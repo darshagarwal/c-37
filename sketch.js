@@ -1,174 +1,172 @@
-var trex, trex_running, trex_collided;
-var ground, invisibleGround, groundImage;
-
-var cloudsGroup, cloudImage;
-var obstaclesGroup, obstacle1, obstacle2, obstacle3, obstacle4, obstacle5, obstacle6;
-
-var score;
-
-var PLAY = 1;
-var END = 0;
-var gameState = PLAY;
-
-var gameOverImg;
-var restartImg;
-
-var gameOver,restart;
-
-
+var paddle;
+var bubble = [];
+var ball;
+var edges;
+var backgroundImg;
+var ballimg1,ballimg2,ballimg3,ballimg4,ballimg5,ballimg6,ballimg7,ballimg8,ballimg9,ballimg10;
+var score = 0;
+var ballArr;
+var ghost,ghostLeftImg,ghostRightImg,deadGhost;
+var megaBallImg;
 function preload(){
-  trex_running = loadAnimation("trex1.png","trex3.png","trex4.png");
-  trex_collided = loadImage("trex_collided.png");
-  
-  groundImage = loadImage("ground2.png");
-  
-  cloudImage = loadImage("cloud.png");
-  
-  obstacle1 = loadImage("obstacle1.png");
-  obstacle2 = loadImage("obstacle2.png");
-  obstacle3 = loadImage("obstacle3.png");
-  obstacle4 = loadImage("obstacle4.png");
-  obstacle5 = loadImage("obstacle5.png");
-  obstacle6 = loadImage("obstacle6.png");
-  
-  gameOverImg = loadImage("gameOver.png");
-  restartImg = loadImage("restart.png");
-  
+	backgroundImg = loadImage("Images/backgroud.jpg");
+	ballimg1 = loadImage("Images/beigeBall.png");
+	ballimg2 = loadImage("Images/blackBall.png");
+	ballimg3 = loadImage("Images/blackishBrownBall.png");
+	ballimg4 = loadImage("Images/chocolateBrownBall.png");
+	ballimg5 = loadImage("Images/darkBlueBall.png");
+	ballimg6 = loadImage("Images/darkBrownBall.png");
+	ballimg7 = loadImage("Images/gerrnBall.png");
+	ballimg8 = loadImage("Images/greyBall.png");
+	ballimg9 = loadImage("Images/lightBrownBall.png");
+	ballimg10 = loadImage("Images/peachBall.png");
+
+	ghostLeftImg = loadImage("Images/ghost left.png");
+	ghostRightImg = loadImage("Images/ghost right.png");
+	megaBallImg = loadImage("Images/mega ball 1.png");
+	deadGhost = loadImage("Images/dead ghost.png");
 }
 
 function setup() {
-  createCanvas(600, 200);
 
-  gameOver = createSprite(300,100);
-  gameOver.addImage(gameOverImg);
- restart = createSprite(300,140);
-  restart.addImage(restartImg);
-  gameOver.scale = 0.5;
-restart.scale = 0.5;
-gameOver.visible = false;
-restart.visible = false;
+	ballArr = [ballimg1,ballimg2,ballimg3,ballimg4,ballimg5,ballimg6,ballimg7,ballimg8,ballimg9,ballimg10];
+	createCanvas(1000, 1050);
+	//Create object for paddle.
+	paddle = new Paddle(400,900,150,30);
+	paddle.display();
 
-  
-  trex = createSprite(50,180,20,50);
-  trex.addAnimation("running", trex_running);
-  trex.scale = 0.5;
-  trex.addAnimation("collided",trex_collided);
-  
-  ground = createSprite(200,180,400,20);
-  ground.addImage("ground",groundImage);
-  ground.x = ground.width /2;
-  ground.velocityX = -4;
-  
-  invisibleGround = createSprite(200,190,400,10);
-  invisibleGround.visible = false;
-  
-  cloudsGroup = new Group();
-  obstaclesGroup = new Group();
-  
-  score = 0;
-  
+	//create object for ball.
+	ball = createSprite(450,900,30,30);
+	ball.addImage(ballArr[Math.round(random(0,9))]);
+	ball.scale = 0.7;
+
+	//bubble = new Bubble(400,200,80);
+	for(var k = 0; k<=width; k = k+65){
+        var bubbleObj = new Bubble(k,height-1800/2,70,20);
+        bubbleObj.bubbleImg();
+		bubble.push(bubbleObj);
+	}
+	
+	for(var k = 0; k<=width; k = k+65){
+        var bubbleObj = new Bubble(k,height-1600/2,70,20);
+        bubbleObj.bubbleImg();
+		bubble.push(bubbleObj);
+	}
+
+	for(var k = 0; k<=width; k = k+65){
+        var bubbleObj = new Bubble(k,height-1400/2,70,20);
+        bubbleObj.bubbleImg();
+		bubble.push(bubbleObj);
+	}
+
+	for(var k = 0; k<=width; k = k+65){
+        var bubbleObj = new Bubble(k,height-1200/2,70,20);
+        bubbleObj.bubbleImg();
+		bubble.push(bubbleObj);
+	}
+
+	edges = createEdgeSprites();
+
+	for(var temp in bubble){
+		var d = int(dist(ball.x,ball.y,bubble[temp].x,bubble[temp].y));
+		if(d <10){
+		//console.log(d);
+		}
+	}	
+
+	// to create a ghost
+	ghost = createSprite(1100,575,50,100);
+	ghost.addImage(ghostLeftImg);
 }
+
 
 function draw() {
-  background(180);
-  background().X=ground.x;
-  
-    text("Score: "+ score, 500, 50);
- // console.log(gameState);
-  
-  if(gameState === PLAY){
-    //move the ground
-    ground.velocityX = -(6 + 3*score/100);
-    
-     score = score + Math.round(getFrameRate()/60);
-    
-    /*if(keyDown("space") && trex.y>190) {
-    trex.velocityY = -10;
-    } */ 
-    //jump when the space key is pressed
-    if(keyDown("space") && trex.y >= 180){
-      trex.velocityY = -12 ;
-      console.log(trex.y);
-    }
-  
-    trex.velocityY = trex.velocityY + 0.8
-    
-     if (ground.x < 0){
-    ground.x = ground.width/2;
-  }
-    
-     //spawn the clouds
-    spawnClouds();
-  
-    //spawn obstacles
-    spawnObstacles();
-    
-    //End the game when trex is touching the obstacle
-    if(obstaclesGroup.isTouching(trex)){
-      gameState = END;
-    }
-  
-  }
-  
-  
-  
- 
-  trex.collide(invisibleGround);
-  
- 
-  
-  drawSprites();
-}
+  background(backgroundImg);
+	fill("blue");
 
-function spawnClouds() {
-  //write code here to spawn the clouds
-  if (frameCount % 60 === 0) {
-    var cloud = createSprite(600,120,40,10);
-    cloud.y = Math.round(random(80,120));
-    cloud.addImage(cloudImage);
-    cloud.scale = 0.5;
-    cloud.velocityX = -3;
-    
-     //assign lifetime to the variable
-    cloud.lifetime = 200;
-    
-    //adjust the depth
-    cloud.depth = trex.depth;
-    trex.depth = trex.depth + 1;
-    
-    //add each cloud to the group
-    cloudsGroup.add(cloud);
-  }
-  
-}
+	if(keyDown("space") && ball.velocityX === 0 && ball.velocityY === 0){
+		ball.velocityX = 1;
+		ball.velocityY = -8;
+	}
 
-function spawnObstacles() {
-  if(frameCount % 60 === 0) {
-    var obstacle = createSprite(600,165,10,40);
-    obstacle.velocityX = -4;
+	ball.bounceOff(edges[0]);
+	ball.bounceOff(edges[1]);
+	ball.bounceOff(edges[2]);
+	//ball.bounceOff(paddle.body);
     
-    //generate random obstacles
-    var rand = Math.round(random(1,6));
-    switch(rand) {
-      case 1: obstacle.addImage(obstacle1);
-              break;
-      case 2: obstacle.addImage(obstacle2);
-              break;
-      case 3: obstacle.addImage(obstacle3);
-              break;
-      case 4: obstacle.addImage(obstacle4);
-              break;
-      case 5: obstacle.addImage(obstacle5);
-              break;
-      case 6: obstacle.addImage(obstacle6);
-              break;
-      default: break;
-    }
-    
-    //assign scale and lifetime to the obstacle           
-    obstacle.scale = 0.5;
-    obstacle.lifetime = 300;
-    //add each obstacle to the group
-    obstaclesGroup.add(obstacle);
-  }
+    for(var temp in bubble){
+		if(ball.bounceOff(bubble[temp].bubble)){
+			console.log("hi");
+			score += 10;
+		}
+	}
+
+	//console.log(ball.collide(paddle.body))
+	if(ball.bounceOff(paddle.body)){
+		ball.addImage(ballArr[Math.round(random(0,9))]);
+	   ball.scale = 0.7;
+	  // ball.velocityX = 0;
+	  // ball.velocityY = 0;
+	   ball.x = paddle.body.x
+	}
+	//	console
+	if(keyDown("right")){
+		this.paddle.body.x += 10;
+	}
+
+	if(keyDown("left")){
+		this.paddle.body.x -= 10;
+	}
+
+	if(score >= 100){
+	if(keyDown("m")){
+		ball.addImage(megaBallImg);
+		ball.scale = 0.075;
+	}
+   }else if(score !== 100){
+	   if(keyDown("m")){
+		   textSize(30)
+		   text("Note:" + "If you want to use 'Mega Ball' you will loose 50 points",25, 1000)
+	   }
+   }
+
+   if(ball.y >= 1050){
+	   textSize(30);
+	   text("GAME OVER!!",350,700)
+   }
+
+   if(score >= 100){
+	ghost.velocityX = -3;
+   }
+   
+   
+  /* if(ghost.bounceOff(edges[1])){
+	ghost.addImage(ghostRightImg);
+	ghost.velocityX = +20;
+	console.log(ghost.velocityX);
+   }*/
+
+
+ if(ball.bounceOff(ghost)){
+	ghost.addImage(deadGhost);
+	ball.addImage(ballArr[Math.round(random(0,9))]);
+	score += 100;
+	//console.log(ballArr[Math.round(random(0,9))]);
+ }
+
+ //to distroy balls
+ if(ball.addImage(ballArr[Math.round(random(0,9))])=== bubble[temp].bubble.addImage(ballArr[Math.round(random(0,9))])){
+	bubble[temp].bubble.distroy();
+ }
+
+ 	if(ball.isTouching(bubble[temp])){
+		 bubble[temp].distroy();
+	 }
+
+	textSize(40);
+	text("Score" + score,50   ,50);
+	textSize(30);
+	text("NOTE:" + "Press 'm' key when the ghost arrive",25,950);
+
+	drawSprites();
 }
